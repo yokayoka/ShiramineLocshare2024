@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<!-- ローカルのタイルレイヤーを表示する -->
+
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>geojsonファイルを表示する</title>
+    <!-- leaflet.css の読み込み -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <!-- leaflet.js の読み込み -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+
+<body>
+    <!-- mymap という名称でmapオブジェクトを読み込む場所を確保する -->
+    <div id="map" style="width: 600px; height: 400px;"></div>
+
+    <script src="json/tree_geojson.js"></script>
+
+    <script>
+
+        var point = L.geoJson(geojsonFeature, {
+            pointToLayer: function (feature, latlng) {
+                return L.circle(latlng, 1, {
+                    color: 'magenta'
+                })
+            },
+            onEachFeature: function (feature, layer) {
+                layer.bindPopup(feature.properties.樹種);
+            }
+        });
+        // var lyrGeojson = L.geoJSON(geojsonFeature, {
+        //     style: markerStyle
+        // });
+
+        // 自分のマシンに保存した地図タイルのフォルダーを指定する。ここでは、tile/forest_typeというフォルダーに地図タイルが置いてある。
+        var forest_tile = L.tileLayer("tile/forest_type/{z}/{x}/{y}.png", {
+            minZoom: 10,
+            maxZoom: 16,
+            attribution: "@ Ishikawa Prefecture"
+        });
+
+        // 地理院地図のタイルを定義する
+        var gsi = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: "<a href='https://maps.gsi.go.jp/development/ichiran.html' target='_blank'>地理院タイル</a>"
+        });
+
+        // Google 高解像度衛星データのタイルを定義する
+        var hybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            maxZoom: 18,
+            attribution: '© Google'
+        });
+
+
+        // map div の場所にmymapというmapオブジェクトを格納し、最初に表示する中心の緯度経度とズームレベルを定義する
+        var mymap = L.map('map', {
+            center: [36.1979, 136.6250],
+            zoom: 13,
+            layers: [gsi, hybrid]
+        });
+
+        // baseMaps という連想配列で地理院地図とGoogle 衛星写真に上で定義したアドレスを渡す
+        var baseMaps = {
+            "地理院地図": gsi,
+            "Google 衛星写真": hybrid
+        };
+
+        // overlayMaps という連想配列で上で定義したcitiesの位置を渡す
+        var overlayMaps = {
+            林相: forest_tile,
+            // 立木: lyrGeojson
+            立木: point
+        };
+
+        // Leaflet のレイヤーコントロールに上で定義したbaseMapsと overlayMapsを格納して、mymapというマップオブジェクトに表示する。
+        var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(mymap);
+
+
+    </script>
+</body>
+
+</html>
